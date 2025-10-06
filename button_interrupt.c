@@ -52,7 +52,7 @@ int main(void) {
     // 1. Configure mask bit (PA2)
     EXTI->IMR1 |= (1 << gpioPinOffset(ENCODERPIN1)); // Configure the mask bit
     // 2. Disable rising edge trigger
-    EXTI->RTSR1 &= ~(1 << gpioPinOffset(ENCODERPIN1));// Disable rising edge trigger
+    EXTI->RTSR1 |= (1 << gpioPinOffset(ENCODERPIN1));// Disable rising edge trigger
     // 3. Enable falling edge trigger
     EXTI->FTSR1 |= (1 << gpioPinOffset(ENCODERPIN1));// Enable falling edge trigger
     // 4. Turn on EXTI interrupt in NVIC_ISER
@@ -62,7 +62,7 @@ int main(void) {
     // 1. Configure mask bit (PA1)
     EXTI->IMR1 |= (1 << gpioPinOffset(ENCODERPIN2)); // Configure the mask bit
     // 2. Disable rising edge trigger
-    EXTI->RTSR1 &= ~(1 << gpioPinOffset(ENCODERPIN2));// Disable rising edge trigger
+    EXTI->RTSR1 |= (1 << gpioPinOffset(ENCODERPIN2));// Disable rising edge trigger
     // 3. Enable falling edge trigger
     EXTI->FTSR1 |= (1 << gpioPinOffset(ENCODERPIN2));// Enable falling edge trigger
     // 4. Turn on EXTI interrupt in NVIC_ISER
