@@ -18,6 +18,10 @@ int _write(int file, char *ptr, int len) {
 }
 
 int led_state;
+float counter;
+
+int encoder_A_status;
+int encoder_B_status; 
 
 int main(void) {
     led_state = 0;
@@ -28,8 +32,8 @@ int main(void) {
 
     // Enable button as input
     gpioEnable(GPIO_PORT_A);
-    pinMode(ENCODERPIN1, GPIO_INPUT);
-    pinMode(ENCODERPIN2, GPIO_INPUT);
+    pinMode(ENCODERPINA, GPIO_INPUT);
+    pinMode(ENCODERPINB, GPIO_INPUT);
 
     GPIOA->PUPDR |= _VAL2FLD(GPIO_PUPDR_PUPD2, 0b01); // Set PA2 as pull-up
     GPIOA->PUPDR |= _VAL2FLD(GPIO_PUPDR_PUPD1, 0b01); // Set PA1 as pull-up
@@ -50,27 +54,41 @@ int main(void) {
 
     // TODO: Configure interrupt for falling edge of GPIO pin for button
     // 1. Configure mask bit (PA2)
-    EXTI->IMR1 |= (1 << gpioPinOffset(ENCODERPIN1)); // Configure the mask bit
+    EXTI->IMR1 |= (1 << gpioPinOffset(ENCODERPINA)); // Configure the mask bit
     // 2. Disable rising edge trigger
-    EXTI->RTSR1 |= (1 << gpioPinOffset(ENCODERPIN1));// Disable rising edge trigger
+    EXTI->RTSR1 |= (1 << gpioPinOffset(ENCODERPINA));// Enable rising edge trigger
     // 3. Enable falling edge trigger
-    EXTI->FTSR1 |= (1 << gpioPinOffset(ENCODERPIN1));// Enable falling edge trigger
+    EXTI->FTSR1 |= (1 << gpioPinOffset(ENCODERPINA));// Enable falling edge trigger
     // 4. Turn on EXTI interrupt in NVIC_ISER
     NVIC->ISER[0] |= (1 << EXTI2_IRQn);
     
 
     // 1. Configure mask bit (PA1)
-    EXTI->IMR1 |= (1 << gpioPinOffset(ENCODERPIN2)); // Configure the mask bit
+    EXTI->IMR1 |= (1 << gpioPinOffset(ENCODERPINB)); // Configure the mask bit
     // 2. Disable rising edge trigger
-    EXTI->RTSR1 |= (1 << gpioPinOffset(ENCODERPIN2));// Disable rising edge trigger
+    EXTI->RTSR1 |= (1 << gpioPinOffset(ENCODERPINB));// Enable rising edge trigger
     // 3. Enable falling edge trigger
-    EXTI->FTSR1 |= (1 << gpioPinOffset(ENCODERPIN2));// Enable falling edge trigger
+    EXTI->FTSR1 |= (1 << gpioPinOffset(ENCODERPINB));// Enable falling edge trigger
     // 4. Turn on EXTI interrupt in NVIC_ISER
     NVIC->ISER[0] |= (1 << EXTI1_IRQn);
+    
+    encoder_A_status = digitalRead(ENCODERPINA);
+    encoder_B_status = digitalRead(ENCODERPINB); 
 
+    int led;
+    led = 0;
+
+    float rps; 
+  
     while(1){   
-        delay_millis(TIM2, 200);
-        printf("LOOPledstate %d\n", led_state);
+        delay_millis(TIM2, 100);
+        rps = (((counter)/4/408) *10);
+        printf("RPS %f\tEncoderA %ds\tEncoderB %d\n", rps, encoder_A_status, encoder_B_status);
+        counter = 0; 
+
+        //led ^= 1U;
+        //digitalWrite(LED_PIN, led);
+
     }
 
 }
@@ -81,9 +99,18 @@ void EXTI2_IRQHandler(void){
     if (EXTI->PR1 & (1 << 2)){
         // If so, clear the interrupt (NB: Write 1 to reset.)
         EXTI->PR1 |= (1 << 2);
+        
+        //encoder_A_status ^= 1U;
+        encoder_A_status = digitalRead(ENCODERPINA);
+        encoder_B_status = digitalRead(ENCODERPINB); 
 
-        // Then toggle the LED
-        digitalWrite(LED_PIN,1);
+
+        if ((encoder_A_status ^ encoder_B_status) == 1){
+            counter += 1; 
+        }  else {
+            counter -= 1; 
+        }
+
     }
 }
 
@@ -94,7 +121,15 @@ void EXTI1_IRQHandler(void){
         // If so, clear the interrupt (NB: Write 1 to reset.)
         EXTI->PR1 |= (1 << 1);
 
-        // Then toggle the LED
-        digitalWrite(LED_PIN, 0);
+        //encoder_B_status ^= 1U;
+        encoder_A_status = digitalRead(ENCODERPINA);
+        encoder_B_status = digitalRead(ENCODERPINB); 
+
+        if ((encoder_A_status ^ encoder_B_status) == 0){
+            counter += 1; 
+        }  else {
+            counter -= 1; 
+        }
+
     }
 }

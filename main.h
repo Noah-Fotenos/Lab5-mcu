@@ -14,8 +14,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #define LED_PIN PB5
-#define ENCODERPIN1 PA2
-#define ENCODERPIN2 PA1
+#define ENCODERPINA PA2
+#define ENCODERPINB PA1
 #define DELAY_TIM TIM2
 
 #endif // MAIN_H
